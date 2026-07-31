@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+
+{% block title %}Register Cadet | NCC CMS{% endblock %}
+{% block page_title %}<i class="bi bi-person-plus-fill me-2"></i>Register New Cadet{% endblock %}
+{% block page_subtitle %}Enter cadet information for enrollment{% endblock %}
+
+{% block content %}
+
+<div class="card dashboard-card form-card shadow-lg">
+    <div class="card-body p-5">
+        <form action="/add" method="POST">
+            <div class="row">
+
+                <!-- Name -->
+                <div class="col-md-6 mb-4">
+                    <label class="form-label fw-bold">
+                        <i class="bi bi-person-fill me-1"></i> Cadet Name
+                    </label>
+                    <input
+                        type="text"
+                        class="form-control"
+                        name="name"
+                        placeholder="Enter Cadet Name"
+                        required>
+                </div>
+
+                <!-- Email -->
+                <div class="col-md-6 mb-4">
+                    <label class="form-label fw-bold">
+                        <i class="bi bi-envelope-fill me-1"></i> Official Email
+                    </label>
+                    <input
+                        type="email"
+                        class="form-control"
+                        name="email"
+                        placeholder="example@gmail.com"
+                        required>
+                </div>
+
+                <!-- Phone -->
+                <div class="col-md-6 mb-4">
+                    <label class="form-label fw-bold">
+                        <i class="bi bi-telephone-fill me-1"></i> Mobile Number
+                    </label>
+                    <div class="input-group">
+                        <span class="input-group-text">+91</span>
+                        <input
+                            type="tel"
+                            class="form-control"
+                            id="phone"
+                            name="phone"
+                            maxlength="10"
+                            minlength="10"
+                            pattern="[6-9]{1}[0-9]{9}"
+                            placeholder="9876543210"
+                            required>
+                    </div>
+                    <small class="text-muted">
+                        Enter a valid 10-digit Indian mobile number.
+                    </small>
+                </div>
+
+                <!-- Battalion -->
+                <div class="col-md-6 mb-4">
+                    <label class="form-label fw-bold">
+                        <i class="bi bi-flag-fill me-1"></i> Unit / Battalion
+                    </label>
+                    <input
+                        type="text"
+                        class="form-control"
+                        name="department"
+                        placeholder="Example : 6 KAR NAVAL UNIT"
+                        required>
+                </div>
+
+            </div>
+
+            <hr class="my-4">
+
+            <!-- Buttons -->
+            <div class="d-flex gap-3">
+                <button type="submit" class="btn btn-success w-100">
+                    <i class="bi bi-person-check-fill"></i>
+                    Register Cadet
+                </button>
+
+                <a href="/dashboard" class="btn btn-secondary w-25">
+                    <i class="bi bi-arrow-left-circle"></i>
+                    Back
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+const phone = document.getElementById("phone");
+if (phone) {
+    phone.addEventListener("input", function () {
+        this.value = this.value.replace(/\D/g, '');
+        if (this.value.length > 10) {
+            this.value = this.value.slice(0, 10);
+        }
+    });
+}
+</script>
+{% endblock %}

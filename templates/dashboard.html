@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard | NCC CMS{% endblock %}
+{% block page_title %}<i class="bi bi-speedometer2 me-2"></i>Command Dashboard{% endblock %}
+{% block page_subtitle %}Welcome back, Administrator &mdash; here is today's operational summary{% endblock %}
+
+{% block topbar_actions %}
+<span class="badge status-badge">
+    <i class="bi bi-broadcast"></i> System Active
+</span>
+{% endblock %}
+
+{% block content %}
+
+<!-- Statistics -->
+<div class="row g-4">
+
+    <div class="col-lg-4">
+        <div class="card dashboard-card">
+            <div class="card-body text-center">
+                <div class="icon-circle green mx-auto">
+                    <i class="bi bi-people-fill"></i>
+                </div>
+                <h6>Total Cadets</h6>
+                <h2 class="counter" data-target="{{ total_records }}">0</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card dashboard-card">
+            <div class="card-body text-center">
+                <div class="icon-circle red mx-auto">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                </div>
+                <h6>Duplicate Records</h6>
+                <h2 class="counter" data-target="{{ duplicates }}">0</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card dashboard-card">
+            <div class="card-body text-center">
+                <div class="icon-circle blue mx-auto">
+                    <i class="bi bi-shield-check"></i>
+                </div>
+                <h6>Data Accuracy</h6>
+                <h2><span class="counter" data-target="{{ accuracy }}">0</span>%</h2>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Quick Actions -->
+<h5 class="section-title mt-5">
+    <i class="bi bi-lightning-charge-fill"></i> Quick Actions
+</h5>
+
+<div class="row mt-3">
+
+    <div class="col-lg-3 col-sm-6 mb-4">
+        <a href="/add" class="quick-btn btn1">
+            <i class="bi bi-person-plus-fill"></i>
+            <span>Register Cadet</span>
+        </a>
+    </div>
+
+    <div class="col-lg-3 col-sm-6 mb-4">
+        <a href="/records" class="quick-btn btn2">
+            <i class="bi bi-table"></i>
+            <span>View Database</span>
+        </a>
+    </div>
+
+    <div class="col-lg-3 col-sm-6 mb-4">
+        <a href="/reports" class="quick-btn btn3">
+            <i class="bi bi-bar-chart-fill"></i>
+            <span>Reports</span>
+        </a>
+    </div>
+
+    <div class="col-lg-3 col-sm-6 mb-4">
+        <a href="/download_report" class="quick-btn btn4">
+            <i class="bi bi-download"></i>
+            <span>Download CSV</span>
+        </a>
+    </div>
+
+</div>
+
+<!-- Analytics Row -->
+<div class="row mt-4">
+
+    <!-- Battalion Distribution -->
+    <div class="col-lg-8 mb-4">
+        <div class="card dashboard-card h-100">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-bar-chart-line-fill"></i>
+                    Battalion Distribution
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if battalion_labels %}
+                <canvas id="battalionChart" height="120"></canvas>
+                {% else %}
+                <p class="text-muted mb-0 text-center py-5">
+                    <i class="bi bi-inboxes fs-1 d-block mb-2"></i>
+                    No cadet data yet. Register a cadet to see the distribution.
+                </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- System Status -->
+    <div class="col-lg-4 mb-4">
+        <div class="card dashboard-card h-100">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-cpu-fill"></i>
+                    System Status
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="status-row">
+                    <strong>Database</strong>
+                    <span class="badge bg-success">Connected</span>
+                </div>
+                <div class="status-row">
+                    <strong>Duplicate Detection</strong>
+                    <span class="badge bg-success">Active</span>
+                </div>
+                <div class="status-row">
+                    <strong>Search Engine</strong>
+                    <span class="badge bg-success">Online</span>
+                </div>
+                <div class="status-row">
+                    <strong>CSV Reports</strong>
+                    <span class="badge bg-success">Enabled</span>
+                </div>
+                <div class="status-row">
+                    <strong>Last Update</strong>
+                    <span class="badge bg-primary">Today</span>
+                </div>
+                <hr>
+                <p class="text-muted mb-0 small">
+                    NCC Cadet Management System is functioning normally.
+                </p>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const battalionLabels = JSON.parse('{{ battalion_labels | tojson | safe }}');
+const battalionCounts = JSON.parse('{{ battalion_counts | tojson | safe }}');
+
+const ctxEl = document.getElementById("battalionChart");
+
+if (ctxEl) {
+    new Chart(ctxEl, {
+        type: "bar",
+        data: {
+            labels: battalionLabels,
+            datasets: [{
+                label: "Cadets",
+                data: battalionCounts,
+                backgroundColor: ["#4a6741","#8a9a5b","#c2b280","#6b4f2a","#5a7247","#3b5323","#a9925a","#2f4f2f"],
+                borderRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+        }
+    });
+}
+</script>
+{% endblock %}

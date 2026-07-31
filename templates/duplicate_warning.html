@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block title %}Duplicate Detected | NCC CMS{% endblock %}
+{% block page_title %}<i class="bi bi-exclamation-triangle-fill me-2"></i>Possible Duplicate Detected{% endblock %}
+{% block page_subtitle %}Review before confirming registration{% endblock %}
+
+{% block content %}
+
+<div class="card dashboard-card border-warning-custom">
+    <div class="card-header duplicate-header">
+        <h4 class="mb-0">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            {{ similarity }}% Name Similarity Found
+        </h4>
+    </div>
+    <div class="card-body p-4">
+
+        <h5><i class="bi bi-person-badge me-1"></i> Existing Cadet on Record</h5>
+        <div class="table-responsive mb-4">
+            <table class="table">
+                <tr><th width="150">Name</th><td>{{ existing.name }}</td></tr>
+                <tr><th>Email</th><td>{{ existing.email }}</td></tr>
+                <tr><th>Phone</th><td>+91 {{ existing.phone }}</td></tr>
+                <tr><th>Unit</th><td>{{ existing.department }}</td></tr>
+            </table>
+        </div>
+
+        <h5><i class="bi bi-person-plus me-1"></i> New Cadet Being Registered</h5>
+        <div class="table-responsive mb-4">
+            <table class="table">
+                <tr><th width="150">Name</th><td>{{ new_name }}</td></tr>
+                <tr><th>Email</th><td>{{ new_email }}</td></tr>
+                <tr><th>Phone</th><td>+91 {{ new_phone }}</td></tr>
+                <tr><th>Unit</th><td>{{ new_department }}</td></tr>
+            </table>
+        </div>
+
+        <form method="POST" action="/add">
+            <input type="hidden" name="name" value="{{ new_name }}">
+            <input type="hidden" name="email" value="{{ new_email }}">
+            <input type="hidden" name="phone" value="{{ new_phone }}">
+            <input type="hidden" name="department" value="{{ new_department }}">
+            <input type="hidden" name="force" value="yes">
+
+            <div class="d-flex gap-3">
+                <button class="btn btn-success">
+                    <i class="bi bi-check-circle"></i>
+                    Register Anyway
+                </button>
+
+                <a href="/add" class="btn btn-danger">
+                    <i class="bi bi-x-circle"></i>
+                    Cancel
+                </a>
+            </div>
+        </form>
+
+    </div>
+</div>
+
+{% endblock %}

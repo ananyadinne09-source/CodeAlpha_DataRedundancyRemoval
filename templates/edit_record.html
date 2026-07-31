@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Cadet | NCC CMS{% endblock %}
+{% block page_title %}<i class="bi bi-pencil-square me-2"></i>Edit Cadet Information{% endblock %}
+{% block page_subtitle %}Update existing personnel details{% endblock %}
+
+{% block topbar_actions %}
+<a href="/records" class="btn btn-outline-secondary btn-sm me-2">
+    <i class="bi bi-arrow-left-circle"></i> Back
+</a>
+{% endblock %}
+
+{% block content %}
+
+<div class="card dashboard-card form-card">
+    <div class="card-body p-4">
+        <form method="POST">
+            <div class="row">
+
+                <div class="col-md-6 mb-4">
+                    <label class="form-label fw-bold">
+                        <i class="bi bi-person-fill me-1"></i> Cadet Name
+                    </label>
+                    <input
+                        type="text"
+                        class="form-control"
+                        name="name"
+                        value="{{ record.name }}"
+                        required>
+                </div>
+
+                <div class="col-md-6 mb-4">
+                    <label class="form-label fw-bold">
+                        <i class="bi bi-envelope-fill me-1"></i> Official Email
+                    </label>
+                    <input
+                        type="email"
+                        class="form-control"
+                        name="email"
+                        value="{{ record.email }}"
+                        required>
+                </div>
+
+                <div class="col-md-6 mb-4">
+                    <label class="form-label fw-bold">
+                        <i class="bi bi-telephone-fill me-1"></i> Mobile Number
+                    </label>
+                    <input
+                        type="text"
+                        class="form-control"
+                        name="phone"
+                        maxlength="10"
+                        value="{{ record.phone }}"
+                        required>
+                </div>
+
+                <div class="col-md-6 mb-4">
+                    <label class="form-label fw-bold">
+                        <i class="bi bi-flag-fill me-1"></i> Battalion
+                    </label>
+                    <input
+                        type="text"
+                        class="form-control"
+                        name="department"
+                        value="{{ record.department }}"
+                        required>
+                </div>
+
+            </div>
+
+            <hr>
+
+            <div class="d-flex gap-3">
+                <button class="btn btn-success">
+                    <i class="bi bi-check-circle-fill"></i>
+                    Update Cadet
+                </button>
+
+                <a href="/records" class="btn btn-danger">
+                    <i class="bi bi-x-circle-fill"></i>
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

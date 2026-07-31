@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block title %}Cadet Database | NCC CMS{% endblock %}
+{% block page_title %}<i class="bi bi-table me-2"></i>Cadet Database{% endblock %}
+{% block page_subtitle %}View, search, edit and delete cadet records{% endblock %}
+
+{% block topbar_actions %}
+<span class="badge status-badge">
+    <i class="bi bi-people-fill"></i> Total Records: {{ records|length }}
+</span>
+{% endblock %}
+
+{% block content %}
+
+<!-- Search -->
+<div class="card dashboard-card mb-4">
+    <div class="card-body">
+        <form method="GET" action="/records">
+            <div class="input-group search-box">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input
+                    type="text"
+                    class="form-control"
+                    name="search"
+                    value="{{ request.args.get('search', '') }}"
+                    placeholder="Search Name, Email, Phone or Unit">
+                <button class="btn btn-success" type="submit">
+                    Search
+                </button>
+                {% if request.args.get('search') %}
+                <a href="/records" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-lg"></i> Clear
+                </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Table -->
+<div class="card dashboard-card">
+    <div class="card-header">
+        <h5>
+            <i class="bi bi-people-fill"></i>
+            Registered Cadets
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Unit</th>
+                        <th>Date</th>
+                        <th width="170">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for record in records %}
+                <tr>
+                    <td>{{ record.id }}</td>
+                    <td><strong>{{ record.name }}</strong></td>
+                    <td>{{ record.email }}</td>
+                    <td>+91 {{ record.phone }}</td>
+                    <td><span class="badge unit-badge">{{ record.department }}</span></td>
+                    <td>{{ record.created_at.strftime('%d-%m-%Y') if record.created_at else '-' }}</td>
+                    <td>
+                        <a href="/edit/{{ record.id }}" class="btn btn-primary btn-sm">
+                            <i class="bi bi-pencil-square"></i> Edit
+                        </a>
+                        <a href="/delete/{{ record.id }}"
+                           onclick="return confirm('Delete this record?')"
+                           class="btn btn-danger btn-sm">
+                            <i class="bi bi-trash"></i> Delete
+                        </a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" class="text-center text-muted py-5">
+                        <i class="bi bi-inboxes fs-1 d-block mb-2"></i>
+                        No cadet records found.
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
