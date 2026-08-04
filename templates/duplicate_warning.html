@@ -1,39 +1,66 @@
 {% extends 'base.html' %}
 
-{% block title %}Duplicate Detected | NCC CMS{% endblock %}
-{% block page_title %}<i class="bi bi-exclamation-triangle-fill me-2"></i>Possible Duplicate Detected{% endblock %}
-{% block page_subtitle %}Review before confirming registration{% endblock %}
+{% block title %}AI Assistant | Duplicate Check{% endblock %}
+{% block page_title %}<i class="bi bi-robot me-2"></i>AI Assistant &mdash; Duplicate Check{% endblock %}
+{% block page_subtitle %}This registration was flagged for review before being saved{% endblock %}
 
 {% block content %}
 
-<div class="card dashboard-card border-warning-custom">
-    <div class="card-header duplicate-header">
-        <h4 class="mb-0">
-            <i class="bi bi-exclamation-triangle-fill"></i>
-            {{ similarity }}% Name Similarity Found
-        </h4>
+<div class="card dashboard-card ai-warning-card">
+
+    <div class="card-header ai-warning-header">
+        <div class="ai-avatar"><i class="bi bi-robot"></i></div>
+        <div>
+            <h4 class="mb-0">Possible Duplicate Detected</h4>
+            <small>Name-similarity match found against an existing cadet record</small>
+        </div>
+        <div class="ms-auto confidence-badge {{ 'conf-high' if similarity >= 90 else ('conf-medium' if similarity >= 75 else 'conf-low') }}">
+            {{ similarity }}% Match
+        </div>
     </div>
+
     <div class="card-body p-4">
 
-        <h5><i class="bi bi-person-badge me-1"></i> Existing Cadet on Record</h5>
-        <div class="table-responsive mb-4">
-            <table class="table">
-                <tr><th width="150">Name</th><td>{{ existing.name }}</td></tr>
-                <tr><th>Email</th><td>{{ existing.email }}</td></tr>
-                <tr><th>Phone</th><td>+91 {{ existing.phone }}</td></tr>
-                <tr><th>Unit</th><td>{{ existing.department }}</td></tr>
-            </table>
+        <div class="ai-note">
+            <i class="bi bi-info-circle-fill"></i>
+            The AI Assistant compares new cadet names against existing records using
+            fuzzy text matching. Any match of <strong>{{ threshold }}% or higher</strong>
+            is flagged here for an administrator to decide &mdash; nothing is saved
+            automatically.
         </div>
 
-        <h5><i class="bi bi-person-plus me-1"></i> New Cadet Being Registered</h5>
-        <div class="table-responsive mb-4">
-            <table class="table">
-                <tr><th width="150">Name</th><td>{{ new_name }}</td></tr>
-                <tr><th>Email</th><td>{{ new_email }}</td></tr>
-                <tr><th>Phone</th><td>+91 {{ new_phone }}</td></tr>
-                <tr><th>Unit</th><td>{{ new_department }}</td></tr>
-            </table>
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <h6 class="compare-title"><i class="bi bi-person-badge"></i> Existing Cadet on Record</h6>
+                <div class="table-responsive">
+                    <table class="table mb-0">
+                        <tr><th width="90">Name</th><td>{{ existing.name }}</td></tr>
+                        <tr><th>Email</th><td>{{ existing.email }}</td></tr>
+                        <tr><th>Phone</th><td>+91 {{ existing.phone }}</td></tr>
+                        <tr><th>Unit</th><td>{{ existing.department }}</td></tr>
+                    </table>
+                </div>
+            </div>
+
+            <div class="col-md-6 mb-4">
+                <h6 class="compare-title new"><i class="bi bi-person-plus"></i> New Cadet Being Registered</h6>
+                <div class="table-responsive">
+                    <table class="table mb-0">
+                        <tr><th width="90">Name</th><td>{{ new_name }}</td></tr>
+                        <tr><th>Email</th><td>{{ new_email }}</td></tr>
+                        <tr><th>Phone</th><td>+91 {{ new_phone }}</td></tr>
+                        <tr><th>Unit</th><td>{{ new_department }}</td></tr>
+                    </table>
+                </div>
+            </div>
         </div>
+
+        <hr>
+
+        <p class="fw-semibold mb-3">
+            <i class="bi bi-question-circle-fill me-1"></i>
+            How should the administrator proceed?
+        </p>
 
         <form method="POST" action="/add">
             <input type="hidden" name="name" value="{{ new_name }}">
@@ -41,18 +68,24 @@
             <input type="hidden" name="phone" value="{{ new_phone }}">
             <input type="hidden" name="department" value="{{ new_department }}">
             <input type="hidden" name="force" value="yes">
+            <input type="hidden" name="flagged_duplicate_id" value="{{ existing.id }}">
+            <input type="hidden" name="flagged_similarity" value="{{ similarity }}">
 
-            <div class="d-flex gap-3">
-                <button class="btn btn-success">
+            <div class="d-flex gap-3 flex-wrap">
+                <button class="btn btn-warning">
                     <i class="bi bi-check-circle"></i>
-                    Register Anyway
+                    Include Anyway &mdash; Register &amp; Flag as Duplicate
                 </button>
 
                 <a href="/add" class="btn btn-danger">
                     <i class="bi bi-x-circle"></i>
-                    Cancel
+                    Discard Registration
                 </a>
             </div>
+            <small class="text-muted d-block mt-3">
+                Choosing "Include Anyway" saves the cadet and adds them to the
+                <a href="/duplicates">Flagged Duplicates</a> list for later review.
+            </small>
         </form>
 
     </div>

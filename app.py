@@ -4,10 +4,9 @@ from models import db, Record
 from rapidfuzz import fuzz
 import csv
 import io
+import os
 
 app = Flask(__name__)
-
-app.secret_key = "cadet_management_system"
 
 app.config.from_object(Config)
 
@@ -15,6 +14,15 @@ db.init_app(app)
 
 with app.app_context():
     db.create_all()
+
+
+# =========================
+# AI DUPLICATE ASSISTANT CONFIG
+# =========================
+
+# Any name-similarity match at or above this percentage is flagged by
+# the AI assistant and routed to the administrator for a decision.
+DUPLICATE_SIMILARITY_THRESHOLD = 75
 
 
 # =========================
@@ -35,21 +43,9 @@ def dashboard():
 
     total_records = Record.query.count()
 
-    duplicate_emails = (
-        db.session.query(Record.email)
-        .group_by(Record.email)
-        .having(db.func.count(Record.email) > 1)
-        .count()
-    )
-
-    duplicate_phones = (
-        db.session.query(Record.phone)
-        .group_by(Record.phone)
-        .having(db.func.count(Record.phone) > 1)
-        .count()
-    )
-
-    duplicates = duplicate_emails + duplicate_phones
+    # Records the AI Duplicate Assistant flagged (>= threshold similarity)
+    # and that the administrator chose to register anyway.
+    duplicates = Record.query.filter_by(is_duplicate=True).count()
 
     if total_records == 0:
         accuracy = 100
@@ -77,12 +73,21 @@ def dashboard():
     battalion_labels = [row[0] for row in battalion_data]
     battalion_counts = [row[1] for row in battalion_data]
 
+    recent_duplicates = (
+        Record.query
+        .filter_by(is_duplicate=True)
+        .order_by(Record.created_at.desc())
+        .limit(5)
+        .all()
+    )
+
     return render_template(
         "dashboard.html",
         total_records=total_records,
         duplicates=duplicates,
         accuracy=accuracy,
         recent_records=recent_records,
+        recent_duplicates=recent_duplicates,
         battalion_labels=battalion_labels,
         battalion_counts=battalion_counts
     )
@@ -137,11 +142,19 @@ def add_record():
 
             return redirect(url_for("add_record"))
 
-        # Name Similarity
+        # AI Duplicate Assistant — name similarity scan
+
+        flagged_id = request.form.get("flagged_duplicate_id")
+
+        flagged_score = request.form.get("flagged_similarity")
 
         if force != "yes":
 
             all_records = Record.query.all()
+
+            best_match = None
+
+            best_score = 0
 
             for record in all_records:
 
@@ -153,25 +166,37 @@ def add_record():
 
                 )
 
-                if similarity >= 80:
+                if similarity >= DUPLICATE_SIMILARITY_THRESHOLD and similarity > best_score:
 
-                    return render_template(
+                    best_match = record
 
-                        "duplicate_warning.html",
+                    best_score = similarity
 
-                        existing=record,
+            if best_match:
 
-                        similarity=round(similarity),
+                return render_template(
 
-                        new_name=name,
+                    "duplicate_warning.html",
 
-                        new_email=email,
+                    existing=best_match,
 
-                        new_phone=phone,
+                    similarity=round(best_score),
 
-                        new_department=department
+                    threshold=DUPLICATE_SIMILARITY_THRESHOLD,
 
-                    )
+                    new_name=name,
+
+                    new_email=email,
+
+                    new_phone=phone,
+
+                    new_department=department
+
+                )
+
+        # Administrator confirmed "Register Anyway" on an AI-flagged match
+
+        is_duplicate = force == "yes" and flagged_score is not None
 
         new_record = Record(
 
@@ -181,7 +206,13 @@ def add_record():
 
             phone=phone,
 
-            department=department
+            department=department,
+
+            is_duplicate=is_duplicate,
+
+            similarity_score=int(flagged_score) if is_duplicate else None,
+
+            duplicate_of_id=int(flagged_id) if is_duplicate and flagged_id else None
 
         )
 
@@ -189,7 +220,23 @@ def add_record():
 
         db.session.commit()
 
-        flash("Cadet Registered Successfully!", "success")
+        if is_duplicate:
+
+            flash(
+
+                f"Cadet Registered — flagged by AI Assistant as a "
+
+                f"{flagged_score}% possible duplicate and included in the "
+
+                f"duplicate count for administrator review.",
+
+                "warning"
+
+            )
+
+        else:
+
+            flash("Cadet Registered Successfully!", "success")
 
         return redirect(url_for("records"))
 
@@ -233,6 +280,45 @@ def records():
 
 
 # =========================
+# AI ASSISTANT — FLAGGED DUPLICATES
+# =========================
+
+@app.route("/duplicates")
+def duplicates():
+
+    flagged_records = (
+        Record.query
+        .filter_by(is_duplicate=True)
+        .order_by(Record.created_at.desc())
+        .all()
+    )
+
+    return render_template(
+        "duplicates.html",
+        flagged_records=flagged_records,
+        threshold=DUPLICATE_SIMILARITY_THRESHOLD
+    )
+
+
+@app.route("/duplicates/unflag/<int:id>")
+def unflag_duplicate(id):
+
+    record = Record.query.get_or_404(id)
+
+    record.is_duplicate = False
+
+    record.similarity_score = None
+
+    record.duplicate_of_id = None
+
+    db.session.commit()
+
+    flash(f"{record.name} has been cleared and removed from the duplicate count.", "success")
+
+    return redirect(url_for("duplicates"))
+
+
+# =========================
 # REPORTS
 # =========================
 
@@ -241,11 +327,35 @@ def reports():
 
     records = Record.query.all()
 
+    battalion_data = (
+        db.session.query(
+            Record.department,
+            db.func.count(Record.id)
+        )
+        .group_by(Record.department)
+        .all()
+    )
+
+    battalion_labels = [row[0] for row in battalion_data]
+    battalion_counts = [row[1] for row in battalion_data]
+
+    flagged_count = Record.query.filter_by(is_duplicate=True).count()
+
+    clean_count = len(records) - flagged_count
+
     return render_template(
 
         "reports.html",
 
-        records=records
+        records=records,
+
+        battalion_labels=battalion_labels,
+
+        battalion_counts=battalion_counts,
+
+        clean_count=clean_count,
+
+        flagged_count=flagged_count
 
     )
 
@@ -365,4 +475,5 @@ def delete(id):
 # =========================
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    debug_mode = os.environ.get("FLASK_DEBUG", "1") == "1"
+    app.run(debug=debug_mode)

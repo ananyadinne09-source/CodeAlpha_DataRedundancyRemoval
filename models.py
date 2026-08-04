@@ -39,5 +39,30 @@ class Record(db.Model):
         default=datetime.utcnow
     )
 
+    # ---- AI Duplicate Assistant fields ----
+
+    is_duplicate = db.Column(
+        db.Boolean,
+        default=False,
+        nullable=False
+    )
+
+    similarity_score = db.Column(
+        db.Integer,
+        nullable=True
+    )
+
+    duplicate_of_id = db.Column(
+        db.Integer,
+        db.ForeignKey("records.id"),
+        nullable=True
+    )
+
+    duplicate_of = db.relationship(
+        "Record",
+        remote_side=[id],
+        foreign_keys=[duplicate_of_id]
+    )
+
     def __repr__(self):
         return f"<Cadet {self.name}>"

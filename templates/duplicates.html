@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+
+{% block title %}Flagged Duplicates | NCC CMS{% endblock %}
+{% block page_title %}<i class="bi bi-robot me-2"></i>AI Assistant &mdash; Flagged Duplicates{% endblock %}
+{% block page_subtitle %}Cadets registered despite a &ge; {{ threshold }}% name-similarity match, pending administrator review{% endblock %}
+
+{% block topbar_actions %}
+<span class="badge status-badge conf-medium-badge">
+    <i class="bi bi-exclamation-triangle-fill"></i> {{ flagged_records|length }} Flagged
+</span>
+{% endblock %}
+
+{% block content %}
+
+<div class="card dashboard-card">
+    <div class="card-header">
+        <h5>
+            <i class="bi bi-shield-exclamation"></i>
+            Records Flagged by the AI Assistant
+        </h5>
+    </div>
+    <div class="card-body">
+
+        {% if flagged_records %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Cadet Name</th>
+                        <th>Matched Against</th>
+                        <th>Similarity</th>
+                        <th>Unit</th>
+                        <th>Registered</th>
+                        <th width="220">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for record in flagged_records %}
+                <tr>
+                    <td>{{ record.id }}</td>
+                    <td><strong>{{ record.name }}</strong><br><small class="text-muted">{{ record.email }}</small></td>
+                    <td>
+                        {% if record.duplicate_of %}
+                            {{ record.duplicate_of.name }}
+                            <br><small class="text-muted">ID #{{ record.duplicate_of.id }}</small>
+                        {% else %}
+                            <span class="text-muted">Original record not found</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="confidence-badge sm {{ 'conf-high' if record.similarity_score and record.similarity_score >= 90 else ('conf-medium' if record.similarity_score and record.similarity_score >= 75 else 'conf-low') }}">
+                            {{ record.similarity_score }}%
+                        </span>
+                    </td>
+                    <td><span class="badge unit-badge">{{ record.department }}</span></td>
+                    <td>{{ record.created_at.strftime('%d-%m-%Y') if record.created_at else '-' }}</td>
+                    <td>
+                        <a href="/duplicates/unflag/{{ record.id }}"
+                           onclick="return confirm('Clear this cadet as not a duplicate?')"
+                           class="btn btn-success btn-sm">
+                            <i class="bi bi-check-lg"></i> Not a Duplicate
+                        </a>
+                        <a href="/delete/{{ record.id }}"
+                           onclick="return confirm('Permanently delete this cadet record?')"
+                           class="btn btn-danger btn-sm">
+                            <i class="bi bi-trash"></i> Delete
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted text-center py-5 mb-0">
+            <i class="bi bi-patch-check fs-1 d-block mb-2"></i>
+            No flagged duplicates right now &mdash; the AI Assistant hasn't found any
+            matches the administrator chose to include.
+        </p>
+        {% endif %}
+
+    </div>
+</div>
+
+{% endblock %}
